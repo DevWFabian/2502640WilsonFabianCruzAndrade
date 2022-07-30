@@ -49,7 +49,7 @@ def salary_calculator(base_salary,days_worked):
             earned_income = ((daily_salary*int(days_worked))+transportation_subsidy)-health_and_pension_discount
             summary={"daily_salary":round(daily_salary,2),"discount":round(health_and_pension_discount,2),"transportation":round(transportation_subsidy,2),"earned_income":round(earned_income,2)}
         else:
-            earned_income = daily_salary*int(days_worked)
+            earned_income = daily_salary*int(days_worked)-health_and_pension_discount
             summary={"daily_salary":round(daily_salary,2),"discount":round(health_and_pension_discount,2),"transportation":0,"earned_income":round(earned_income,2)}
         return summary
 def show_all_records(record_list:list):
@@ -70,7 +70,7 @@ def show_all_records(record_list:list):
     return output_message    
 def save_in_text_document(text_to_save:str):
     try:
-        with open("PayrollApp/payroll.txt","w",encoding="utf-8")as pr:
+        with open("PayrollApp/payroll.txt","a+",encoding="utf-8")as pr:
             pr.write(text_to_save)
             print("se ha guardado los registros en el archivo")
     except:
