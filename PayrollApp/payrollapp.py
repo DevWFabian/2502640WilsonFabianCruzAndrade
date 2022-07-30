@@ -1,5 +1,6 @@
-from datetime import datetime
+from datetime import date, datetime
 import re
+import time
 def create_user(document_number,first_name,last_name,days_worked,base_salary):
     user={"id":document_number,"first_name":first_name,"last_name":last_name,"days_worked":days_worked,"salary":base_salary}
     return user
@@ -59,7 +60,7 @@ def show_all_records(record_list:list):
         output_message+=f"\n\t\t\t*****Nomina*****\n"
         for v in i.values():
             value_list.append(v)
-        output_message+=f"\tFecha: {datetime.today()}\n\tNumero de documento: {value_list[0]}\n"
+        output_message+=f"\tFecha: {date.fromtimestamp(time.time())}\n\tNumero de documento: {value_list[0]}\n"
         output_message+=f"\tNombre: {value_list[1]}\n\tApellido: {value_list[2]}\n"
         output_message+=f"\t\t\t***resumen***\n"
         output_message+=f"\tDias trabajados: {value_list[3]}\n\tSalario base: ${value_list[4]}\n"
