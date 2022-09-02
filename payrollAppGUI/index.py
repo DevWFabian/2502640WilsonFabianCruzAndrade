@@ -37,7 +37,24 @@ class Payroll(tk.Tk):
         self.baseSalary.grid(row = 5 , column = 1, padx=20)
         boton1 = ttk.Button(tabulador, text='Registrar')
         boton1.grid(row=1, column=2)
-    def readEmployees(self,tabulador):
+    def run_query(self,query,parameters=()):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor=conn.cursor()
+            result=cursor.execute(query, parameters)
+            conn.commit()
+        return result
+    def get_employees(self):
+        # limpiar tabla
+        records=self.tree.get_children()
+        for element in records:
+            self.tree.delete(element)
+        #ejecutar sentencia
+        query= "select * from empleados"
+        db_rows=self.run_query(query)
+        print(db_rows)
+        for row in db_rows:
+            print(row)
+    def getEmployees(self,tabulador):
         self.tree=ttk.Treeview(tabulador,height=15,columns=("Nombres","Apellidos","Tipo de documento","Numero de documento","Salario base"))
         self.tree.heading("#0",text="ID_Empleado");self.tree.column("#0",width=100,anchor=CENTER)
         self.tree.heading("Nombres",text="Nombres");self.tree.column("Nombres",width=150,anchor=CENTER)
@@ -47,6 +64,23 @@ class Payroll(tk.Tk):
         self.tree.heading("Salario base",text="Salario base");self.tree.column("Salario base",width=150,anchor=CENTER)
         self.tree.grid(row=0,column=0,columnspan=1,padx=20,pady=20)     
         self.get_employees()
+    def run_query(self,query,parameters=()):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor=conn.cursor()
+            result=cursor.execute(query, parameters)
+            conn.commit()
+        return result
+    def get_employees(self):
+        # limpiar tabla
+        records=self.tree.get_children()
+        for element in records:
+            self.tree.delete(element)
+        #ejecutar sentencia
+        query= "select * from empleados"
+        db_rows=self.run_query(query)
+        print(db_rows)
+        for row in db_rows:
+            self.tree.insert('',0,text=row[1],values=(3))
     def create_tabs(self):
         control_tab = ttk.Notebook(self)
         tab1 = ttk.Frame(control_tab)
@@ -57,26 +91,9 @@ class Payroll(tk.Tk):
         self.createEmployee(tab1)
         tab2 = ttk.Frame(control_tab)
         control_tab.add(tab2, text='Mostrar Registros')
-        self.readEmployees(tab2)
+        self.getEmployees(tab2)
 
-    def run_query(self,query,parameters=()):
-        with sqlite3.connect(self.db_name) as conn:
-            cursor=conn.cursor()
-            result=cursor.execute(query,parameters)
-            conn.commit()
-        return result
-    def get_employees(self):
-        # limpiar tabla
-        records=self.tree.get_children()
-        for element in records:
-            self.tree.delete(element)
-        #ejecutar sentencia
-        query='select * from Empleado'
-        db_rows=self.run_query(query)
-        for row in db_rows:
-            print(row)
-
-
+    
 
 
 
