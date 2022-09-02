@@ -1,8 +1,8 @@
-from calendar import c
 import tkinter as tk
 from tkinter import CENTER, N, ttk, messagebox
-
+import sqlite3
 class Payroll(tk.Tk):
+    db_name = 'database.db'
     def __init__(self):
         super().__init__()
         self.title('Nomina')
@@ -45,9 +45,8 @@ class Payroll(tk.Tk):
         self.tree.heading("Tipo de documento",text="Tipo de documento");self.tree.column("Tipo de documento",width=150,anchor=CENTER)
         self.tree.heading("Numero de documento",text="Numero de documento");self.tree.column("Numero de documento",width=150,anchor=CENTER)
         self.tree.heading("Salario base",text="Salario base");self.tree.column("Salario base",width=150,anchor=CENTER)
-        self.tree.grid(row=0,column=0,columnspan=1,padx=20,pady=20)
-        
-        
+        self.tree.grid(row=0,column=0,columnspan=1,padx=20,pady=20)     
+        self.get_employees()
     def create_tabs(self):
         control_tab = ttk.Notebook(self)
         tab1 = ttk.Frame(control_tab)
@@ -59,7 +58,24 @@ class Payroll(tk.Tk):
         tab2 = ttk.Frame(control_tab)
         control_tab.add(tab2, text='Mostrar Registros')
         self.readEmployees(tab2)
-        
+
+    def run_query(self,query,parameters=()):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor=conn.cursor()
+            result=cursor.execute(query,parameters)
+            conn.commit()
+        return result
+    def get_employees(self):
+        # limpiar tabla
+        records=self.tree.get_children()
+        for element in records:
+            self.tree.delete(element)
+        #ejecutar sentencia
+        query='select * from Empleado'
+        db_rows=self.run_query(query)
+        for row in db_rows:
+            print(row)
+
 
 
 
