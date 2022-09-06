@@ -1,3 +1,4 @@
+from distutils.filelist import findall
 import tkinter as tk
 import re
 from tkinter import CENTER,ttk, messagebox
@@ -14,7 +15,7 @@ class Payroll(tk.Tk):
         self.table_employees(tabulador)
         self.tree.bind('<<TreeviewSelect>>',self.selectRows)
     def payroll(self,tabulador):
-        pass
+        self.form_payrool(tabulador)
         
     def selectRows(self,e):
         self.firstName.delete(0,tk.END)
@@ -48,6 +49,7 @@ class Payroll(tk.Tk):
         tk.Label(frame , text = 'Nombres: ',font=15,padx=40,justify="left").grid(row=1,column=0,padx=5,pady=10,sticky=tk.W)
         self.firstName= tk.Entry(frame, width=30,font=15)
         self.firstName.grid(row = 1 , column = 1, padx=10)
+        
         # Apellidos
         tk.Label(frame , text = 'Apellidos: ',font=15,padx=40).grid(row=2,column=0,padx=2,pady=10,sticky=tk.W)
         self.lastName= tk.Entry(frame, width=30,font=15)
@@ -64,14 +66,23 @@ class Payroll(tk.Tk):
         # Salario base
         tk.Label(frame, text='Salario Base:',font=15, padx=40).grid(row=5,column=0,padx=5,pady=10,sticky=tk.W)
         self.baseSalary= tk.Entry(frame, width=30,font=15)
-        self.baseSalary.grid(row = 5 , column = 1, padx=10) 
+        self.baseSalary.grid(row = 5 , column = 1, padx=10)
+            
         boton1 = ttk.Button(tabulador, text='Registrar', command=self.insert_employees)
         boton1.grid(row=1, column=1)
         boton2 = ttk.Button(tabulador, text='Actualizar', command=self.update_employees)
         boton2.grid(row=1, column=2,pady=5)
         boton3 = ttk.Button(tabulador, text='Eliminar', command=self.delete_employees)
         boton3.grid(row=1, column=3,pady=5)
-    
+    def form_payrool(self,tabulador):
+        frame= tk.LabelFrame(tabulador,text='Nomina',font=15)
+        frame.grid(row = 0 ,column = 1, columnspan = 3,pady = 20, padx=20)
+        filt = tk.LabelFrame(frame , text = 'Filtrar: ',font=15,padx=20)
+        filt.grid(row=0,column=1,padx=5,pady=10,sticky=tk.W)
+        self.filter_option=ttk.Combobox(filt,width=41 ,values=('Seleccione','id empleado','Numero Documento','Nombre','Apellido'))
+        self.filter_option.grid(row=1, column=2, padx=10, pady=10)
+        def option_combobox(self,e):
+            pass
     def run_query(self,query,parameters=()):
         with sqlite3.connect(self.db_name) as conn:
             cursor=conn.cursor()
@@ -97,38 +108,68 @@ class Payroll(tk.Tk):
         db_rows=self.run_query(query)
         for row in db_rows:
             self.tree.insert('',0,text=row[0],values=(row[1],row[2],row[3],row[4],row[5]))
-    def validations(self):
-        val_name= r'/^[^\s]+([^\s]+)+$/'
-        self.regex_name= re.compile(val_name)
-        val_last_name = r'/^[^\s]+([^\s]+)+$/'
-        self.regex_last_name = re.compile(val_last_name)
-        val_type_document = r'$'
-        self.regex_type_document= re.compile(val_type_document)  
-        val_num_document= r'/^[0-9]{7,15}$/'
-        self.regex_num_document=re.compile(val_num_document)
-        val_salary= r'([0-9]+(?:\.[0-9]+)?)(?:\s)'
-        self.regex_salary= re.compile(val_salary)  
+    def validationsForm(self,input_text:str,atribute_name:str,type_data:str,character_match:str,min_len:int,max_len:int,limit=False,limit_range=0,):
+        validation= re.findall(character_match,input_text)
+        if limit:
+            if validation:
+                messagebox.showwarning(f"Advertencia",f"La entrada de {atribute_name} solo puede contener {type_data}")
+                return False
+            elif input_text == '':
+                messagebox.showwarning(f"advertencia",f"Los espacios de {atribute_name} no pueden quedar en blanco")
+                return False
+            elif len(input_text) < min_len:
+                messagebox.showwarning("Advertencia",f"El numero minimo de caracteres para el campo {atribute_name} es {min_len}")
+                return False
+            elif len(input_text) > max_len:
+                messagebox.showwarning("Advertencia",f"El numero maximo de caracteres para el campo {atribute_name} es {max_len}")
+                return False
+            elif int(input_text)> limit_range:
+                messagebox.showwarning("Advertencia",f"El valor ingresado en el campo {atribute_name} no puede ser mayor a {limit_range}")
+                return False
+            else:
+                return True
+        else:
+            if validation:
+                messagebox.showwarning(f"Advertencia",f"La entrada de {atribute_name} solo puede contener {type_data}")
+                return False
+            elif input_text == '':
+                messagebox.showwarning(f"advertencia",f"Los espacios de {atribute_name} no pueden quedar en blanco")
+                return False
+            elif len(input_text) < min_len:
+                messagebox.showwarning("Advertencia",f"El numero minimo de caracteres para el campo {atribute_name} es {min_len}")
+                return False
+            elif len(input_text) > max_len:
+                messagebox.showwarning("Advertencia",f"El numero maximo de caracteres para el campo {atribute_name} es {max_len}")
+                return False
+            else:
+                return True
     def insert_employees(self):
         try:
-            query= "insert into empleados(empNombre,empApellido,empTipoDocumento,empNumeroDocumento,empSalarioBase)"
-            query+=" values(?,?,?,?,?)"
-            parameters=(self.firstName.get(),self.lastName.get(),self.typeDocument.get(),self.documentNumber.get(),float(self.baseSalary.get()))            
-            self.run_query(query,parameters)
-            messagebox.showinfo('Aviso','Registro exitoso')
-            #limipiar Espacios
-            self.firstName.delete(0,tk.END)
-            self.lastName.delete(0,tk.END)
-            self.typeDocument.delete(0,tk.END)
-            self.documentNumber.delete(0,tk.END)
-            self.baseSalary.delete(0,tk.END)
-            messagebox.showinfo('Exito','Se registro exitosamente el empleado')
+            validation_name= self.validationsForm(self.firstName.get(),'Nombres','Letras','[^a-zñ A-ZÑ]',2,30)
+            validation_last_name= self.validationsForm(self.lastName.get(),'Apellidos','Letras','[^a-zñ A-ZÑ]',2,30)
+            validation_type_document= self.validationsForm(self.typeDocument.get(),'Tipo de Documento','Opciones','[^a-zñ A-ZÑ]',2,30)
+            validation_document_number= self.validationsForm(self.documentNumber.get(),'Numero de documento','Numeros',"[^0-9]",7,15)
+            validation_base_salary= self.validationsForm(self.baseSalary.get(),'Salario','Numeros con o sin decimales','[^\\d.\\d]',6,12)
+            if validation_name==True and validation_last_name==True and validation_type_document==True and validation_document_number==True and validation_base_salary==True:
+                query= "insert into empleados(empNombre,empApellido,empTipoDocumento,empNumeroDocumento,empSalarioBase)"
+                query+=" values(?,?,?,?,?)"
+                
+                parameters=(self.firstName.get(),self.lastName.get(),self.typeDocument.get(),self.documentNumber.get(),float(self.baseSalary.get()))            
+                self.run_query(query,parameters)
+                messagebox.showinfo('Exito','Se registro exitosamente el empleado')
+                #limipiar Espacios
+                self.firstName.delete(0,tk.END)
+                self.lastName.delete(0,tk.END)
+                self.typeDocument.delete(0,tk.END)
+                self.documentNumber.delete(0,tk.END)
+                self.baseSalary.delete(0,tk.END)
         except ValueError as e:
             messagebox.showerror('Error','No se registro el empleado')
-        self.select_employees()
+            self.select_employees()
     def update_employees(self):
         try:
             idEmployeed=self.tree.item(self.tree.selection())['text']
-            basSalary=self.tree.item(self.tree.selection())['values'][3]
+            basSalary=self.tree.item(self.tree.selection())['values'][4]
             try:
                 query= f"update empleados set empNombre=?,empApellido=?,empTipoDocumento=?,empNumeroDocumento=?,empSalarioBase=? WHERE idEmpleados= ?"
                 parameters = (self.firstName.get(),self.lastName.get(),self.typeDocument.get(),self.documentNumber.get(),basSalary,idEmployeed)     
