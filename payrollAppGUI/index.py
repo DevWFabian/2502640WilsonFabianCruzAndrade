@@ -15,8 +15,7 @@ class Payroll(tk.Tk):
         self.table_employees(tabulador)
         self.tree.bind('<<TreeviewSelect>>',self.selectRows)
     def payroll(self,tabulador):
-        self.form_payrool(tabulador)
-        
+        self.form_filter(tabulador)       
     def selectRows(self,e):
         self.firstName.delete(0,tk.END)
         self.lastName.delete(0,tk.END)
@@ -74,15 +73,73 @@ class Payroll(tk.Tk):
         boton2.grid(row=1, column=2,pady=5)
         boton3 = ttk.Button(tabulador, text='Eliminar', command=self.delete_employees)
         boton3.grid(row=1, column=3,pady=5)
-    def form_payrool(self,tabulador):
-        frame= tk.LabelFrame(tabulador,text='Nomina',font=15)
-        frame.grid(row = 0 ,column = 1, columnspan = 3,pady = 20, padx=20)
+    def form_filter(self,tabulador):
+        frame= tk.LabelFrame(tabulador,text='',font=15)
+        frame.grid(row = 0 ,column = 0, columnspan = 3,pady = 20, padx=20)
         filt = tk.LabelFrame(frame , text = 'Filtrar: ',font=15,padx=20)
-        filt.grid(row=0,column=1,padx=5,pady=10,sticky=tk.W)
-        self.filter_option=ttk.Combobox(filt,width=41 ,values=('Seleccione','id empleado','Numero Documento','Nombre','Apellido'))
-        self.filter_option.grid(row=1, column=2, padx=10, pady=10)
-        def option_combobox(self,e):
-            pass
+        filt.grid(row=0,column=0,padx=5,pady=10,sticky=tk.W)
+        tk.Label(filt , text = 'Seleccione: ',font=15,padx=10,justify="left").grid(row=0,column=0,padx=5,pady=10,sticky=tk.W)
+        self.filter_option=ttk.Combobox(filt,width=41 ,values=('ID empleado','Numero Documento'))
+        self.filter_option.grid(row=0, column=2, padx=10, pady=10)
+        tk.Label(filt , text = 'Valor: ',font=15,padx=10,justify="left").grid(row=1,column=0,padx=5,pady=10,sticky=tk.W)
+        self.filter_value= tk.Entry(filt, width=30,font=15)
+        self.filter_value.grid(row = 1 , column = 2, padx=10)
+        #tabla registros filtrados
+        self.tree2=ttk.Treeview(filt,height=3,columns=("Nombres","Apellidos","Tipo de documento","Numero de documento","Salario base"))
+        self.tree2.heading("#0",text="ID_Empleado");self.tree2.column("#0",width=100,anchor=CENTER)
+        self.tree2.heading("Nombres",text="Nombres");self.tree2.column("Nombres",width=125,anchor=CENTER)
+        self.tree2.heading("Apellidos",text="Apellidos");self.tree2.column("Apellidos",width=125,anchor=CENTER)
+        self.tree2.heading("Tipo de documento",text="Tipo de documento");self.tree2.column("Tipo de documento",width=125,anchor=CENTER)
+        self.tree2.heading("Numero de documento",text="Numero de documento");self.tree2.column("Numero de documento",width=135,anchor=CENTER)
+        self.tree2.heading("Salario base",text="Salario base");self.tree2.column("Salario base",width=125,anchor=CENTER)
+        self.tree2.grid(row=0,column=4,columnspan=1,rowspan=3,padx=5,pady=20)
+        boton1 = ttk.Button(filt, text='Filtrar', command=self.select_filter_employees)
+        boton1.grid(row=2, column=1)
+        frame_payroll= tk.LabelFrame(frame,text='Nomina',font=15)
+        frame_payroll.grid(row=1,column=0,padx=5,pady=10,sticky=tk.W)
+        tk.Label(frame_payroll , text = 'Dias Trabajados: ',font=15,padx=10,justify="left").grid(row=1,column=0,padx=5,pady=10,sticky=tk.W)
+        self.daysWorked= tk.Entry(frame_payroll, width=10,font=15)
+        self.daysWorked.grid(row =1 , column = 1, padx=10)
+        boton1 = ttk.Button(frame_payroll, text='Filtrar', command=self.calculatePayroll)
+        boton1.grid(row=1, column=2)
+        self.tree3=ttk.Treeview(frame_payroll,height=3,columns=("Nombres","Apellidos","Salario base","Dias Trabajados","Salud","Pension","Total"))
+        self.tree3.heading("#0",text="ID_Empleado");self.tree3.column("#0",width=100,anchor=CENTER)
+        self.tree3.heading("Nombres",text="Nombres");self.tree3.column("Nombres",width=125,anchor=CENTER)
+        self.tree3.heading("Apellidos",text="Apellidos");self.tree3.column("Apellidos",width=125,anchor=CENTER)
+        self.tree3.heading("Salario base",text="Salario base");self.tree3.column("Salario base",width=125,anchor=CENTER)
+        self.tree3.heading("Dias Trabajados",text="Dias Trabajados");self.tree3.column("Dias Trabajados",width=125,anchor=CENTER)
+        self.tree3.heading("Salud",text="Salud");self.tree3.column("Salud",width=125,anchor=CENTER)
+        self.tree3.heading("Pension",text="Pension");self.tree3.column("Pension",width=125,anchor=CENTER)
+        self.tree3.heading("Total",text="Total");self.tree3.column("Total",width=125,anchor=CENTER)
+        self.tree3.grid(row=1,column=4,columnspan=1,padx=5,pady=20)
+        
+    def calculatePayroll(self):
+        try:
+            records=self.tree3.get_children()
+            for element in records:
+                self.tree3.delete(element)
+            idEmployeed=self.tree2.item(self.tree2.selection())['text']
+            nameEmpoyeed=self.tree2.item(self.tree2.selection())['values'][0]
+            lastNameEmpoyeed=self.tree2.item(self.tree2.selection())['values'][1]
+            basSalary=self.tree2.item(self.tree2.selection())['values'][4]
+            validation_days_worked= self.validationsForm(self.daysWorked.get(),'Numero de documento','Numeros',"[^0-9]",1,2,True,30)
+            if validation_days_worked:
+                daily_salary=float(basSalary)/30
+                healt='4%'
+                pension='4%'
+                health_and_pension_discount= (daily_salary* 0.08)*int(self.daysWorked.get())
+                if float(basSalary) <=2000000:
+                    transportation_subsidy = (117100/30)*int(self.daysWorked.get())
+                    earned_income = (daily_salary*int(self.daysWorked.get())+transportation_subsidy)-health_and_pension_discount
+                else:
+                    transportation_subsidy= 0
+                    earned_income = daily_salary*int(self.daysWorked.get())-health_and_pension_discount
+                
+                self.tree3.insert('',0,text=idEmployeed,values=(nameEmpoyeed,lastNameEmpoyeed,basSalary,self.daysWorked.get(),healt,pension,earned_income))
+
+        except IndexError as e:
+            messagebox.showerror("Error","Seleccione un registro de la tabla que se filtro")
+                   
     def run_query(self,query,parameters=()):
         with sqlite3.connect(self.db_name) as conn:
             cursor=conn.cursor()
@@ -99,7 +156,7 @@ class Payroll(tk.Tk):
         self.tree.heading("Salario base",text="Salario base");self.tree.column("Salario base",width=125,anchor=CENTER)
         self.tree.grid(row=0,column=4,columnspan=1,padx=5,pady=20)
         self.select_employees()
-    def select_employees(self):    
+    def select_employees(self):
         records=self.tree.get_children()
         for element in records:
             self.tree.delete(element)
@@ -107,42 +164,32 @@ class Payroll(tk.Tk):
         query= "select * from empleados order by idEmpleados desc"
         db_rows=self.run_query(query)
         for row in db_rows:
-            self.tree.insert('',0,text=row[0],values=(row[1],row[2],row[3],row[4],row[5]))
-    def validationsForm(self,input_text:str,atribute_name:str,type_data:str,character_match:str,min_len:int,max_len:int,limit=False,limit_range=0,):
-        validation= re.findall(character_match,input_text)
-        if limit:
-            if validation:
-                messagebox.showwarning(f"Advertencia",f"La entrada de {atribute_name} solo puede contener {type_data}")
-                return False
-            elif input_text == '':
-                messagebox.showwarning(f"advertencia",f"Los espacios de {atribute_name} no pueden quedar en blanco")
-                return False
-            elif len(input_text) < min_len:
-                messagebox.showwarning("Advertencia",f"El numero minimo de caracteres para el campo {atribute_name} es {min_len}")
-                return False
-            elif len(input_text) > max_len:
-                messagebox.showwarning("Advertencia",f"El numero maximo de caracteres para el campo {atribute_name} es {max_len}")
-                return False
-            elif int(input_text)> limit_range:
-                messagebox.showwarning("Advertencia",f"El valor ingresado en el campo {atribute_name} no puede ser mayor a {limit_range}")
-                return False
+            self.tree.insert('',0,text=row[0],values=(row[1],row[2],row[3],row[4],row[5]))   
+    def select_filter_employees(self):
+        records=self.tree2.get_children()
+        for element in records:
+            self.tree2.delete(element)
+        #ejecutar sentencia
+        if self.filter_option.get()=='ID empleado':
+            option='idEmpleados'
+            value= self.validationsForm(self.filter_value.get(),'ID Empleado','Numeros',"[^0-9]",1,15)
+            if value:
+                query= f"select * from empleados where {option}= {self.filter_value.get()} order by idEmpleados desc"
+                db_rows=self.run_query(query)
+                for row in db_rows:
+                    self.tree2.insert('',0,text=row[0],values=(row[1],row[2],row[3],row[4],row[5])) 
+        elif self.filter_option.get()=='Numero Documento':
+            option='empNumeroDocumento'
+            value= self.validationsForm(self.filter_value.get(),'Numero de documento','Numeros',"[^0-9]",1,15)
+            if value:
+                query= f"select * from empleados where {option}={self.filter_value.get()} order by idEmpleados desc"
+                db_rows=self.run_query(query)
+                for row in db_rows:
+                    self.tree2.insert('',0,text=row[0],values=(row[1],row[2],row[3],row[4],row[5]))
             else:
-                return True
+                messagebox.showerror('Error','No se encontro registro')
         else:
-            if validation:
-                messagebox.showwarning(f"Advertencia",f"La entrada de {atribute_name} solo puede contener {type_data}")
-                return False
-            elif input_text == '':
-                messagebox.showwarning(f"advertencia",f"Los espacios de {atribute_name} no pueden quedar en blanco")
-                return False
-            elif len(input_text) < min_len:
-                messagebox.showwarning("Advertencia",f"El numero minimo de caracteres para el campo {atribute_name} es {min_len}")
-                return False
-            elif len(input_text) > max_len:
-                messagebox.showwarning("Advertencia",f"El numero maximo de caracteres para el campo {atribute_name} es {max_len}")
-                return False
-            else:
-                return True
+            messagebox.showerror('Error','Seleccione una opcion e ingrese un valor')
     def insert_employees(self):
         try:
             validation_name= self.validationsForm(self.firstName.get(),'Nombres','Letras','[^a-zñ A-ZÑ]',2,30)
@@ -206,6 +253,41 @@ class Payroll(tk.Tk):
         except IndexError as e:
             messagebox.showerror("Error","Seleccione un registro de la tabla")
         self.select_employees()
+    def validationsForm(self,input_text:str,atribute_name:str,type_data:str,character_match:str,min_len:int,max_len:int,limit=False,limit_range=0,):
+        validation= re.findall(character_match,input_text)
+        if limit:
+            if validation:
+                messagebox.showwarning(f"Advertencia",f"La entrada de {atribute_name} solo puede contener {type_data}")
+                return False
+            elif input_text == '':
+                messagebox.showwarning(f"advertencia",f"Los espacios de {atribute_name} no pueden quedar en blanco")
+                return False
+            elif len(input_text) < min_len:
+                messagebox.showwarning("Advertencia",f"El numero minimo de caracteres para el campo {atribute_name} es {min_len}")
+                return False
+            elif len(input_text) > max_len:
+                messagebox.showwarning("Advertencia",f"El numero maximo de caracteres para el campo {atribute_name} es {max_len}")
+                return False
+            elif int(input_text)> limit_range:
+                messagebox.showwarning("Advertencia",f"El valor ingresado en el campo {atribute_name} no puede ser mayor a {limit_range}")
+                return False
+            else:
+                return True
+        else:
+            if validation:
+                messagebox.showwarning(f"Advertencia",f"La entrada de {atribute_name} solo puede contener {type_data}")
+                return False
+            elif input_text == '':
+                messagebox.showwarning(f"advertencia",f"Los espacios de {atribute_name} no pueden quedar en blanco")
+                return False
+            elif len(input_text) < min_len:
+                messagebox.showwarning("Advertencia",f"El numero minimo de caracteres para el campo {atribute_name} es {min_len}")
+                return False
+            elif len(input_text) > max_len:
+                messagebox.showwarning("Advertencia",f"El numero maximo de caracteres para el campo {atribute_name} es {max_len}")
+                return False
+            else:
+                return True
 if __name__ == '__main__':
     application = Payroll()
     application.mainloop()
