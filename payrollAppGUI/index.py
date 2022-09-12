@@ -1,4 +1,3 @@
-from distutils.filelist import findall
 import tkinter as tk
 import re
 from tkinter import CENTER,ttk, messagebox
@@ -8,8 +7,7 @@ class Payroll(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title('Nomina')
-        self.create_tabs()
-    
+        self.create_tabs()    
     def employee(self,tabulador):
         self.formEmployee(tabulador)
         self.table_employees(tabulador)
@@ -111,8 +109,7 @@ class Payroll(tk.Tk):
         self.tree3.heading("Salud",text="Salud");self.tree3.column("Salud",width=125,anchor=CENTER)
         self.tree3.heading("Pension",text="Pension");self.tree3.column("Pension",width=125,anchor=CENTER)
         self.tree3.heading("Total",text="Total");self.tree3.column("Total",width=125,anchor=CENTER)
-        self.tree3.grid(row=1,column=4,columnspan=1,padx=5,pady=20)
-        
+        self.tree3.grid(row=1,column=4,columnspan=1,padx=5,pady=20)        
     def calculatePayroll(self):
         try:
             records=self.tree3.get_children()
@@ -138,8 +135,7 @@ class Payroll(tk.Tk):
                 self.tree3.insert('',0,text=idEmployeed,values=(nameEmpoyeed,lastNameEmpoyeed,basSalary,self.daysWorked.get(),healt,pension,earned_income))
 
         except IndexError as e:
-            messagebox.showerror("Error","Seleccione un registro de la tabla que se filtro")
-                   
+            messagebox.showerror("Error","Seleccione un registro de la tabla que se filtro")              
     def run_query(self,query,parameters=()):
         with sqlite3.connect(self.db_name) as conn:
             cursor=conn.cursor()
